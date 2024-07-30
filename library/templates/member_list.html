@@ -1,0 +1,19 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Members</title>
+</head>
+<body>
+    <h1>Members</h1>
+    <a href="{% url 'member_create' %}">Add New Member</a>
+    <ul>
+        {% for member in members %}
+        <li>{{ member.first_name }} {{ member.last_name }} - {{ member.email }}
+            <a href="{% url 'member_update' member.pk %}">Edit</a>
+            <a href="{% url 'member_delete' member.pk %}">Delete</a>
+        </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

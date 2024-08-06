@@ -1,9 +1,13 @@
 
 from django.urls import path
 from . import views
+from .views import LoginView
 
 urlpatterns = [
-    path('', views.media_list, name='media_list'),
+    path('register/', views.register_view, name='register'),
+    path('login/', LoginView.as_view(), name='login'),
+    path('logout/', views.logout_view, name='logout'),
+    path('', views.home_view, name='home'),
     path('members/', views.member_list, name='member_list'),
     path('borrow/', views.borrow_create, name='borrow_create'),
 ]

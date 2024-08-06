@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2> Page d'accueil </h2>
+
+    <h3>Médias</h3>
+    <ul>
+        {% for media in medias %}
+        <li>{{ media.title }}</li>
+        {% endfor %}
+    </ul>
+
+    <section>
+        {% if member.is_librarian %}
+            <h3>Membres</h3>
+            <ul>
+                {% for membre in membres %}
+                <li>{{ member.first_name }} {{ member.last_name }} - {{ member.email }}
+                    <a href="{% url 'member_update' member.pk %}">Modifier</a>
+                    <a href="{% url 'member_delete' member.pk %}">Supprimer</a>
+                </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <a href="{% url 'borrow_create' %}">
+        {% endif %}
+    </section>
+    
+{% endblock %}

@@ -1,9 +1,77 @@
 
 from django.shortcuts import render, get_object_or_404, redirect
+from django import forms
 from django.http import HttpResponse
 from django.contrib.contenttypes.models import ContentType
-from .models import Member, Book, DVD, CD, BoardGame, Borrow
+from .models import Member, Book, DVD, CD, BoardGame, Borrow, Media
 from django.utils import timezone
+from django.shortcuts import render, redirect
+from django.contrib.auth import login, authenticate, logout
+from django.contrib.auth import views as auth_views
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib import messages
+
+class MemberCreationForm(UserCreationForm):
+    class Meta:
+        model = Member
+        fields = ('first_name', 'last_name', 'email')
+
+def register_view(request):
+    if request.method == 'POST':
+        form = MemberCreationForm(request.POST)
+        if form.is_valid():
+            member = form.save()
+            login(request, member)
+            member.is_active == True
+            return redirect('home')
+    else:
+        form = MemberCreationForm()
+    return render(request, 'register.html', {'form': form})
+
+
+class LoginView(auth_views.LoginView):
+    template_name = 'login.html'
+
+# def login_view(request):
+    # if request.method == 'POST':
+    #     form = AuthenticationForm(request, data=request.POST)
+    #     if form.is_valid():
+    #         email = form.cleaned_data.get('username')
+    #         password = form.cleaned_data.get('password')
+    #         member = authenticate(email=email, password=password)
+    #         if user is not None:
+    #             login(request, member)
+    #             return redirect('home')
+    #         else:
+    #             messages.error(request, 'Mot de passe ou email invalide.')
+    #             return render(request, 'register.html', {'form': form, 'error': 'Authentication failed.'})
+
+    #     else:
+    #         messages.error(request, 'Mot de passe ou email invalide.')
+    # else:
+    #     form = AuthenticationForm()
+    # return render(request, 'login.html', {'form': form})
+
+def logout_view(request):
+    logout(request)
+    return redirect('login')
+
+def home_view(request):
+    books = Book.objects.all()
+    dvds = DVD.objects.all()
+    cds = CD.objects.all()
+    board_games = BoardGame.objects.all()
+    
+    medias = list(books) + list(dvds) + list(cds) + list(board_games)
+    
+    members = Member.objects.all()
+    return render(request, 'home.html', {'medias': medias, 'members': members})
+
+def menu():
+    return redirect('media_list')
+
+def menu_librarian():
+    return redirect ('member_list')
 
 
 def member_list(request):

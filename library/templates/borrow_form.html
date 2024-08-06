@@ -5,7 +5,7 @@
     <title>Borrow Media</title>
 </head>
 <body>
-    <h1>Borrow Media</h1>
+    <h1>Ajouter l'emprunt d'un média : </h1>
     <form method="post">
         {% csrf_token %}
         <label for="member">Member:</label>
@@ -15,25 +15,25 @@
             {% endfor %}
         </select><br>
 
-        <label for="media_type">Media Type:</label>
+        <label for="media_type">Type de média:</label>
         <select name="media_type" id="media_type">
-            <option value="book">Book</option>
+            <option value="book">Livre</option>
             <option value="dvd">DVD</option>
             <option value="cd">CD</option>
-            <option value="boardgame">BoardGame</option>
+            <option value="boardgame">Jeu de plateau</option>
         </select><br>
 
-        <label for="media">Media:</label>
+        <label for="media">Média:</label>
         <select name="media" id="media">
             {% for media in media_list %}
             <option value="{{ media.id }}">{{ media.title }}</option>
             {% endfor %}
         </select><br>
 
-        <label for="return_date">Return Date:</label>
+        <label for="return_date">Date de retour:</label>
         <input type="date" name="return_date" id="return_date"><br>
 
-        <button type="submit">Borrow</button>
+        <button type="submit">Emprunter</button>
     </form>
 </body>
 </html>

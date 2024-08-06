@@ -3,26 +3,43 @@
 {% block content %}
     <h2> Page d'accueil </h2>
 
-    <h3>Médias</h3>
+    <h3>Liste des médias</h3>
+    <form method="GET" action="{% url 'home' %}">
+        <select name="media_type" id="media_type">
+            <option value="">-- Choisir un type --</option>
+            <option value="book">Livre</option>
+            <option value="dvd">DVD</option>
+            <option value="cd">CD</option>
+            <option value="boardgame">Jeu de plateau</option>
+        </select>
+        <button type="submit">Filtrer</button>
+    </form>
+    <br>
+
     <ul>
         {% for media in medias %}
-        <li>{{ media.title }}</li>
+            <li>{{ media.title }}</li>
+        {% empty %}
+            <li>Aucun média disponible.</li>
         {% endfor %}
     </ul>
 
+    <br>
+    {{user.email}}
+
     <section>
-        {% if member.is_librarian %}
+        {% if user.is_staff %}
             <h3>Membres</h3>
             <ul>
-                {% for membre in membres %}
-                <li>{{ member.first_name }} {{ member.last_name }} - {{ member.email }}
+                {% for member in members %}
+                <li>{{ member.first_name }} {{ member.last_name }} - {{ member.email }} - {{member.is_staff}}
                     <a href="{% url 'member_update' member.pk %}">Modifier</a>
                     <a href="{% url 'member_delete' member.pk %}">Supprimer</a>
                 </li>
                 {% endfor %}
             </ul>
         {% else %}
-            <a href="{% url 'borrow_create' %}">
+            <a href="{% url 'borrow_create' %}">Formulaire d'emprunt d'un média</a>
         {% endif %}
     </section>
     

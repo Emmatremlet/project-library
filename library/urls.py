@@ -1,21 +1,21 @@
 
 from django.urls import path
 from . import views
-from .views import LoginView
 
 urlpatterns = [
     path('register/', views.register_view, name='register'),
-    path('login/', LoginView.as_view(), name='login'),
+    path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
     path('', views.home_view, name='home'),
     path('members/', views.member_list, name='member_list'),
     path('borrow/', views.borrow_create, name='borrow_create'),
+    path('<int:pk>/edit/', views.member_update, name='member_update'),
+    path('<int:pk>/delete/', views.member_delete, name='member_delete'),
 ]
 
 '''
 path('members/new/', views.member_create, name='member_create'),
-path('members/<int:pk>/edit/', views.member_update, name='member_update'),
-path('members/<int:pk>/delete/', views.member_delete, name='member_delete'),
+
 
 
 ''',

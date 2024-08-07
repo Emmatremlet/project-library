@@ -8,16 +8,14 @@
 </head>
 <body>
     <nav>
-        {% if member.is_active %}
+        {% if user.is_active %}
             <a href="{% url 'logout' %}">Se déconnecter</a>
-            <span>Bienvenue, {{ member.first_name }}!</span>
+            <span>Bienvenue, {{ user.first_name }}!</span>
         {% else %}
             <a href="{% url 'login' %}">Se connecter</a>
             <a href="{% url 'register' %}">Créer un compte</a>
-            <a href="{% url 'logout' %}">Se déconnecter</a>
         {% endif %}
     </nav>
-    <hr>
     {% block content %}
 
     {% endblock %}

@@ -1,7 +1,11 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <h2> Page d'accueil </h2>
+    {% if user.is_staff %}
+        <h2> Page d'accueil des bibliothécaires </h2>
+    {% else %}
+        <h2> Page d'accueil</h2>
+    {% endif %}
 
     <h3>Liste des médias</h3>
     <form method="GET" action="{% url 'home' %}">
@@ -38,6 +42,7 @@
                 </li>
                 {% endfor %}
             </ul>
+            <a href="{% url 'borrow_create' %}">Formulaire d'emprunt d'un média</a>
         {% else %}
             <a href="{% url 'borrow_create' %}">Formulaire d'emprunt d'un média</a>
         {% endif %}

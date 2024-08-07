@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h2>Ajouter un média</h2>
+
+    <form method="GET" action="{% url 'add_media' %}">
+        <select name="media_type" id="media_type">
+            <option value="">-- Choisir un type --</option>
+            <option value="book">Livre</option>
+            <option value="dvd">DVD</option>
+            <option value="cd">CD</option>
+            <option value="boardgame">Jeu de plateau</option>
+        </select>
+        <button type="submit">Choisir</button>
+    </form>
+    <br>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Ajouter</button>
+    </form>
+    
+{% endblock %}

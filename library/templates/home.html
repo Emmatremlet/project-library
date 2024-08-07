@@ -28,8 +28,10 @@
         {% endfor %}
     </ul>
 
+    <a href="{% url 'add_media' %}" >Ajouter un média</a>
     <br>
-    {{user.email}}
+    Membre connecté : {{user.email}} 
+    <br>À RETIRER
 
     <section>
         {% if user.is_staff %}

@@ -45,21 +45,46 @@
         <p>Un emprunt doit être retourné au bout d’1 semaine.</p>
         <br>
         <button type="submit">Emprunter</button>
-        {% if messages %}
-            <ul>
-                {% for message in messages %}
-                    {% if 'borrow' in message.tags %}
-                        <li>{{ message }}</li>
-                    {% endif %}
-                {% endfor %}
-            </ul>
-        {% endif %}
+        
     </form>
+    {% if messages %}
+        <ul>
+            {% for message in messages %}
+                {% if 'borrow' in message.tags %}
+                    <li>{{ message }}</li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    {% endif %}
 
     <ul >
         {% for borrow in borrows %}
-            <li>{{borrow.media.title}} -- {{borrow.borrow_date}} -- {{borrow.member.too_much}} -- {{borrow.media.is_borrowed}}             
+            <li> Nom de l'emprunteur : {{borrow.member}}<br>
+                Titre du média : {{borrow.media.title}} <br>
+                Date de l'emprunt :{{borrow.borrow_date}}<br>
+                Nombre d'emprunt du membre : {{borrow.member.too_much}}<br>
+                {% if borrow.days_late > 0 %}
+                    Retard de {{ borrow.days_late }} jours
+                {% elif borrow.return_media %}
+                    L'emprunt a déjà été retourné
+                {% else %}
+                    A jour
+                {% endif %}
+                <br>
+                <a href="{% url 'borrow_return' borrow.pk %}">Retourner</a>
                 <a href="{% url 'borrow_delete' borrow.pk %}">Supprimer</a>
+
+                {% if messages %}
+                    <ul>
+                        {% for message in messages %}
+                            {% if 'return_delete' in message.tags %}
+                                <li>{{ message }}</li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                <br>
+                <br>
             </li>       
         {% endfor %}
     </ul> 

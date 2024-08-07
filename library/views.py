@@ -8,6 +8,8 @@ from django.contrib.auth import login, logout, get_user_model
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from datetime import timedelta
+from django.utils import timezone
 
 class EmailAuthenticationForm(AuthenticationForm):
     username = forms.EmailField(label='Email')
@@ -22,6 +24,36 @@ class EmailAuthenticationForm(AuthenticationForm):
 
         return cleaned_data
 
+class MemberUpdateForm(forms.ModelForm):
+    class Meta:
+        model = Member
+        fields = ['first_name', 'last_name', 'email']
+        
+
+
+        
+class BookForm(forms.ModelForm):
+    class Meta:
+        model = Book
+        fields = ['title', 'author']
+        
+class CDForm(forms.ModelForm):
+    class Meta:
+        model = CD
+        fields = ['title', 'artist']
+        
+
+class DVDForm(forms.ModelForm):
+    class Meta:
+        model = DVD
+        fields = ['title', 'director']
+        
+
+class BoardGameForm(forms.ModelForm):
+    class Meta:
+        model = BoardGame
+        fields = ['title', 'creator']
+        
 
 def base_views(request): 
     return render(request, 'base.html', {'user': request.user})
@@ -41,7 +73,6 @@ class MemberCreationForm(forms.ModelForm):
             user.save()
         return user
     
-
     
 def register_view(request):
     if request.method == 'POST':
@@ -55,10 +86,6 @@ def register_view(request):
     else:
         form = MemberCreationForm()
     return render(request, 'register.html', {'form': form})
-
-
-# class LoginView(auth_views.LoginView):
-#     template_name = 'login.html'
 
 
 def login_view(request):
@@ -80,8 +107,9 @@ def logout_view(request):
     logout(request)
     return redirect('login')
 
+
 def home_view(request):
-    
+
     members = Member.objects.all()
     media_type = request.GET.get('media_type', None)
     
@@ -106,16 +134,45 @@ def home_view(request):
 
     return render(request, 'home.html', {'medias': medias, 'members': members, 'user': request.user})
 
-def menu():
-    return redirect('media_list')
 
-def menu_librarian():
-    return redirect ('member_list')
+def add_media(request):
+    media_type = request.GET.get('media_type', None)
+    form = BookForm(request.POST)
+    
+    if media_type == "book":
+        if request.method == 'POST':
+            form = BookForm(request.POST)
+            if form.is_valid():
+                form.save()
+                return redirect('home')  
+        else:
+            form = BookForm()    
+    elif media_type == "cd":
+        if request.method == 'POST':
+            form = CDForm(request.POST)
+            if form.is_valid():
+                form.save()
+                return redirect('home')  
+        else:
+            form = CDForm()    
+    elif media_type == "dvd": 
+        if request.method == 'POST':
+            form = DVDForm(request.POST)
+            if form.is_valid():
+                form.save()
+                return redirect('home')  
+        else:
+            form = DVDForm()
+    elif media_type == "boardgame": 
+        if request.method == 'POST':
+            form = BoardGameForm(request.POST)
+            if form.is_valid():
+                form.save()
+                return redirect('home')  
+        else:
+            form = BoardGameForm()
 
-
-def member_list(request):
-    members = Member.objects.all()
-    return render(request, 'member_list.html', {'members': members})
+    return render(request, 'media_form.html', {'form': form})
 
 
 def member_create(request):
@@ -139,11 +196,25 @@ def member_update(request, pk):
         return redirect('home')
     return render(request, 'member_form.html', {'member': member})
 
+@login_required
+def member_update(request, pk):
+    member = get_object_or_404(Member, pk=pk)
+
+    if request.method == 'POST':
+        form = MemberUpdateForm(request.POST, instance=member)
+        if form.is_valid():
+            form.save()
+            return redirect('home')
+    else:
+        form = MemberUpdateForm(instance=member)
+
+    return render(request, 'member_form.html', {'form': form})
 
 def member_delete(request, pk):
     member = get_object_or_404(Member, pk=pk)
     member.delete()
     return redirect('home')
+
 
 def borrow_delete(request, pk):
     borrow = get_object_or_404(Borrow, pk=pk)
@@ -158,17 +229,20 @@ def borrow_delete(request, pk):
 
     borrow.delete()
 
-    messages.success(request, 'Emprunt supprimé avec succès.')
+    messages.success(request, 'Emprunt supprimé avec succès.',  extra_tags='borrow')
     return redirect('borrow_create')
 
-def media_list(request):
-    books = Book.objects.all()
-    dvds = DVD.objects.all()
-    cds = CD.objects.all()
-    boardgames = BoardGame.objects.all()
-    return render(request, 'media_list.html', {
-        'books': books, 'dvds': dvds, 'cds': cds, 'boardgames': boardgames
-    })
+def borrow_return (request, pk):
+    borrow = get_object_or_404(Borrow, pk=pk)
+    borrow.return_media = True
+    borrow.save()
+    
+    messages.success(request, 'Emprunt retourné avec succès.', extra_tags='borrow')
+    return redirect('borrow_create')
+    
+
+def default_return_date(date):
+    return date + timedelta(weeks=1)
 
 @login_required
 def borrow_create(request):
@@ -177,7 +251,8 @@ def borrow_create(request):
     dvds = DVD.objects.filter(is_borrowed=False)
     cds = CD.objects.filter(is_borrowed=False)
     user = request.user
-    borrows = Borrow.objects.filter(member=user)
+    borrows = Borrow.objects.all()
+    
 
     if request.method == "POST":
         member_id = request.POST['member']
@@ -189,8 +264,13 @@ def borrow_create(request):
         media_class = content_type.model_class()
         media = get_object_or_404(media_class, id=media_id)
         
-        if member.borrowing_late:
-            messages.error(request, 'Vous avez déjà un emprunt en retard.', extra_tags='borrow')
+        has_late_returns = Borrow.objects.filter(
+            member=member,
+            return_date__lt=timezone.now().date()
+        ).exists()
+        
+        if has_late_returns:
+            messages.error(request, 'Vous avez au moins un emprunt en retard.', extra_tags='borrow')
             return redirect('borrow_create')
         elif member.too_much >= 3:
             messages.error(request, 'Vous avez déjà 3 emprunts.', extra_tags='borrow')

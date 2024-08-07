@@ -82,9 +82,14 @@ class Borrow(models.Model):
     media = GenericForeignKey('content_type', 'object_id')
     borrow_date = models.DateField(auto_now_add=True)
     return_date = models.DateField(default=default_return_date)
+    return_media = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.member} borrowed {self.media}"
 
+    def days_late(self):
+        if timezone.now().date() > self.return_date:
+            return (timezone.now().date() - self.return_date).days
+        return 0
 
 

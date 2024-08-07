@@ -3,31 +3,27 @@ from django.db import models
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from datetime import timedelta
+from django.utils import timezone
 
 class Media(models.Model):
     title = models.CharField(max_length=200)
-
+    
     class Meta:
         abstract = True
 
 
 class Book(Media):
     author = models.CharField(max_length=100)
-    borrow_date = models.DateField()
-    isbn = models.CharField(max_length=13, unique=True)
-
+    is_borrowed = models.BooleanField(default=False)
 
 class DVD(Media):
     director = models.CharField(max_length=100)
-    borrow_date = models.DateField()
-    isbn = models.CharField(max_length=13, unique=True)
-
+    is_borrowed = models.BooleanField(default=False)
 
 class CD(Media):
     artist = models.CharField(max_length=100)
-    borrow_date = models.DateField()
-    isbn = models.CharField(max_length=13, unique=True)
-
+    is_borrowed = models.BooleanField(default=False)
 
 class BoardGame(Media):
     creator = models.CharField(max_length=100)
@@ -64,7 +60,8 @@ class Member(AbstractBaseUser, PermissionsMixin):
     date_joined = models.DateField(auto_now_add=True)
     is_active = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
-
+    borrowing_late = models.BooleanField(default=False)
+    too_much = models.PositiveBigIntegerField(default=0)
 
     objects = MemberManager()
 
@@ -74,13 +71,17 @@ class Member(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
 
+def default_return_date():
+    return timezone.now().date() + timedelta(weeks=1)
+
+
 class Borrow(models.Model):
     member = models.ForeignKey(Member, on_delete=models.CASCADE)
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     media = GenericForeignKey('content_type', 'object_id')
     borrow_date = models.DateField(auto_now_add=True)
-    return_date = models.DateField()
+    return_date = models.DateField(default=default_return_date)
 
     def __str__(self):
         return f"{self.member} borrowed {self.media}"

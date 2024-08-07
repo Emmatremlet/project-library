@@ -9,6 +9,7 @@
 <body>
     <nav>
         {% if user.is_active %}
+            <a href="{% url 'home' %}">Accueil</a>
             <a href="{% url 'logout' %}">Se déconnecter</a>
             <span>Bienvenue, {{ user.first_name }}!</span>
         {% else %}

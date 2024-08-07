@@ -7,6 +7,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout, get_user_model
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 
 class EmailAuthenticationForm(AuthenticationForm):
     username = forms.EmailField(label='Email')
@@ -66,11 +67,10 @@ def login_view(request):
         if form.is_valid():
             user = form.get_user()
             login(request, user)
-            messages.success(request, 'Vous êtes connecté avec succès.')
+            messages.success(request, 'Vous êtes connecté avec succès.', extra_tags='login')
             return redirect('home')
         else:
-            print(form.errors)
-            messages.error(request, 'Identifiants invalides.')
+            messages.error(request, 'Identifiants invalides.', extra_tags='login')
     else:
         form = EmailAuthenticationForm()
     return render(request, 'login.html', {'form': form})
@@ -145,6 +145,21 @@ def member_delete(request, pk):
     member.delete()
     return redirect('home')
 
+def borrow_delete(request, pk):
+    borrow = get_object_or_404(Borrow, pk=pk)
+
+    media = borrow.media
+    media.is_borrowed = False
+    media.save()
+
+    member = borrow.member
+    member.too_much -= 1
+    member.save()
+
+    borrow.delete()
+
+    messages.success(request, 'Emprunt supprimé avec succès.')
+    return redirect('borrow_create')
 
 def media_list(request):
     books = Book.objects.all()
@@ -155,19 +170,48 @@ def media_list(request):
         'books': books, 'dvds': dvds, 'cds': cds, 'boardgames': boardgames
     })
 
-
+@login_required
 def borrow_create(request):
+    members = Member.objects.all()
+    books = Book.objects.filter(is_borrowed=False)
+    dvds = DVD.objects.filter(is_borrowed=False)
+    cds = CD.objects.filter(is_borrowed=False)
+    user = request.user
+    borrows = Borrow.objects.filter(member=user)
+
     if request.method == "POST":
         member_id = request.POST['member']
-        media_type = request.POST['media_type']
         media_id = request.POST['media']
-        return_date = request.POST['return_date']
+        media_type = request.POST['media_type']
 
         member = get_object_or_404(Member, id=member_id)
         content_type = get_object_or_404(ContentType, model=media_type)
-        media = get_object_or_404(content_type.model_class(), id=media_id)
+        media_class = content_type.model_class()
+        media = get_object_or_404(media_class, id=media_id)
+        
+        if member.borrowing_late:
+            messages.error(request, 'Vous avez déjà un emprunt en retard.', extra_tags='borrow')
+            return redirect('borrow_create')
+        elif member.too_much >= 3:
+            messages.error(request, 'Vous avez déjà 3 emprunts.', extra_tags='borrow')
+            return redirect('borrow_create')
+        else:
+            member.too_much += 1
+            member.save()
+            
+            media.is_borrowed = True
+            media.save()
+            
+            borrow = Borrow(member=member, content_type=content_type, object_id=media_id)
+            borrow.save()
+            
+            messages.success(request, 'Emprunt effectué avec succès.', extra_tags='borrow')
+            return redirect('borrow_create')
 
-        borrow = Borrow(member=member, content_type=content_type, object_id=media_id, return_date=return_date)
-        borrow.save()
-        return redirect('media_list')
-    return render(request, 'borrow_form.html')
+    return render(request, 'borrow_form.html', {
+        'books': books,
+        'cds': cds,
+        'dvds': dvds,
+        'members': members,
+        'borrows': borrows,
+    })

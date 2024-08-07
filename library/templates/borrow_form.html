@@ -1,39 +1,66 @@
 
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Borrow Media</title>
-</head>
-<body>
+{% extends 'base.html' %}
+
+{% block content %}
     <h1>Ajouter l'emprunt d'un média : </h1>
     <form method="post">
         {% csrf_token %}
-        <label for="member">Member:</label>
+        <label for="member">Member :</label>
         <select name="member" id="member">
             {% for member in members %}
             <option value="{{ member.id }}">{{ member.first_name }} {{ member.last_name }}</option>
             {% endfor %}
-        </select><br>
-
-        <label for="media_type">Type de média:</label>
+        </select>
+        <br>
+        <br>
+        <label for="media_type">Type de Média :</label>
         <select name="media_type" id="media_type">
+            <option value="">-- Choisir un type --</option>
             <option value="book">Livre</option>
             <option value="dvd">DVD</option>
             <option value="cd">CD</option>
-            <option value="boardgame">Jeu de plateau</option>
-        </select><br>
+        </select>
+        <br>
+        <br>
 
-        <label for="media">Média:</label>
+        <label for="media">Média :</label>
         <select name="media" id="media">
-            {% for media in media_list %}
-            <option value="{{ media.id }}">{{ media.title }}</option>
-            {% endfor %}
-        </select><br>
-
-        <label for="return_date">Date de retour:</label>
-        <input type="date" name="return_date" id="return_date"><br>
-
+            <optgroup label='Livres'>
+                {% for book in books %}
+                <option value="{{ book.id }}">{{ book.title }}</option>
+                {% endfor %}
+            </optgroup>
+            <optgroup label='CD'>
+                {% for cd in cds %}
+                <option value="{{ cd.id }}">{{ cd.title }}</option>
+                {% endfor %}
+            </optgroup>
+            <optgroup label='DVD'>
+                {% for dvd in dvds %}
+                <option value="{{ dvd.id }}">{{ dvd.title }}</option>
+                {% endfor %}
+            </optgroup>
+        </select>
+        <br>
+        <p>Un emprunt doit être retourné au bout d’1 semaine.</p>
+        <br>
         <button type="submit">Emprunter</button>
+        {% if messages %}
+            <ul>
+                {% for message in messages %}
+                    {% if 'borrow' in message.tags %}
+                        <li>{{ message }}</li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        {% endif %}
     </form>
-</body>
-</html>
+
+    <ul >
+        {% for borrow in borrows %}
+            <li>{{borrow.media.title}} -- {{borrow.borrow_date}} -- {{borrow.member.too_much}} -- {{borrow.media.is_borrowed}}             
+                <a href="{% url 'borrow_delete' borrow.pk %}">Supprimer</a>
+            </li>       
+        {% endfor %}
+    </ul> 
+{% endblock %}

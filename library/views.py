@@ -60,15 +60,13 @@ def base_views(request):
 
 
 class MemberCreationForm(forms.ModelForm):
-    password = forms.CharField(widget=forms.PasswordInput)
     
     class Meta:
         model = Member
-        fields = ('first_name', 'last_name', 'email')
+        fields = ('first_name', 'last_name', 'email', 'is_staff')
 
     def save(self, commit=True):
         user = super().save(commit=False)
-        user.set_password(self.cleaned_data["password"])
         if commit:
             user.save()
         return user
@@ -295,3 +293,16 @@ def borrow_create(request):
         'members': members,
         'borrows': borrows,
     })
+    
+def member_create(request):
+    if request.method == 'POST':
+        form = MemberCreationForm(request.POST)
+        if form.is_valid():
+            member = form.save()
+            member.is_active = True
+            member.save()
+            messages.success(request, 'Membre créé avec succès.', extra_tags='member')
+            return redirect('member_create')
+    else:
+        form = MemberCreationForm()
+    return render(request, 'member_create.html', {'form': form})

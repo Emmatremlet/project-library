@@ -13,6 +13,8 @@ urlpatterns = [
     path('borrow_delete/<int:pk>/', views.borrow_delete, name='borrow_delete'),
     path('borrow_return/<int:pk>/', views.borrow_return, name='borrow_return'),
     path('add_media/', views.add_media, name='add_media'),
+    path('member/', views.member_create, name='member_create'),
+
 
 
 ]

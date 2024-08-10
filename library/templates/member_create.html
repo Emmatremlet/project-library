@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h2>Créer un membre</h2>
+
+  <form method="post"> 
+
+    {% csrf_token %}
+    {{ form.as_p }}
+
+    <button type="submit">Création du membre</button>
+
+    {% if messages %}
+        <ul>
+            {% for message in messages %}
+                {% if 'member' in message.tags %}
+                    <li>{{ message }}</li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    {% endif %}
+    
+  </form>
+{% endblock %}
